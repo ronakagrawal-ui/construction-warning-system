@@ -1,0 +1,272 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ProjectType {
+  RESIDENTIAL
+  COMMERCIAL
+  MIXED
+}
+
+enum MilestoneStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  DELAYED
+  COMPLETED
+}
+
+enum ApprovalStatus {
+  PENDING
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum IssueCategory {
+  CONTRACTOR
+  APPROVAL
+  MATERIAL
+  FINANCE
+  QUALITY
+  DESIGN
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum IssueStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+model Project {
+  id                     String      @id @default(cuid())
+  name                   String
+  location               String
+  type                   ProjectType @default(RESIDENTIAL)
+  totalTowers            Int         @default(1)
+  totalUnits             Int
+  startDate              DateTime
+  plannedEndDate         DateTime
+  totalBudget            Float?
+  projectManager         String
+  reraNumber             String?
+  reraPromisedPossession DateTime?
+  cachedSummary          String?
+  summaryGeneratedAt     DateTime?
+
+  towers      Tower[]
+  milestones  Milestone[]
+  contractors Contractor[]
+  approvals   Approval[]
+  materials   Material[]
+  finance     Finance?
+  sales       Sales[]
+  issues      Issue[]
+  compliance  Compliance?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Tower {
+  id            String  @id @default(cuid())
+  projectId     String
+  project       Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name          String
+  floors        Int
+  unitsPerFloor Int
+  totalUnits    Int
+  currentStatus String  @default("PLANNED")
+
+  milestones Milestone[]
+  sales      Sales[]
+}
+
+model Milestone {
+  id               String          @id @default(cuid())
+  projectId        String
+  project          Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  towerId          String?
+  tower            Tower?          @relation(fields: [towerId], references: [id])
+
+  name             String
+  weightage        Float           @default(0)
+  plannedStartDate DateTime
+  plannedEndDate   DateTime
+  actualStartDate  DateTime?
+  plannedProgress  Float           @default(0)
+  actualProgress   Float           @default(0)
+  isCriticalPath   Boolean         @default(false)
+  status           MilestoneStatus @default(NOT_STARTED)
+
+  contractorId String?
+  contractor   Contractor? @relation(fields: [contractorId], references: [id])
+
+  dependsOn  Milestone[] @relation("MilestoneDeps")
+  dependents Milestone[] @relation("MilestoneDeps")
+
+  approvals Approval[]
+  materials Material[]
+  issues    Issue[]
+}
+
+model Contractor {
+  id                   String  @id @default(cuid())
+  projectId            String
+  project              Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name                 String
+  phone                String?
+  scope                String
+  currentProgress      Float   @default(0)
+  delayHistoryDays     Int     @default(0)
+  reworkIncidents      Int     @default(0)
+  manpowerCount        Int     @default(0)
+  manpowerRequired     Int     @default(0)
+  pendingPaymentAmount Float   @default(0)
+  disputeStatus        String  @default("NONE")
+
+  milestones Milestone[]
+}
+
+model Approval {
+  id                  String         @id @default(cuid())
+  projectId           String
+  project             Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name                String
+  authority           String
+  dueDate             DateTime
+  status              ApprovalStatus @default(PENDING)
+  documentsReady      Boolean        @default(false)
+  blockingMilestoneId String?
+  blockingMilestone   Milestone?     @relation(fields: [blockingMilestoneId], references: [id])
+  complianceRisk      RiskLevel      @default(LOW)
+}
+
+model Material {
+  id                   String     @id @default(cuid())
+  projectId            String
+  project              Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name                 String
+  quantityRequired     Float      @default(0)
+  quantityAvailable    Float      @default(0)
+  expectedDeliveryDate DateTime?
+  vendorLeadTimeDays   Int        @default(0)
+  linkedMilestoneId    String?
+  linkedMilestone      Milestone? @relation(fields: [linkedMilestoneId], references: [id])
+}
+
+model Finance {
+  id              String  @id @default(cuid())
+  projectId       String  @unique
+  project         Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  totalBudget     Float   @default(0)
+  amountSpent     Float   @default(0)
+  committedCost   Float   @default(0)
+  pendingPayments Float   @default(0)
+  delayCostPerDay Float   @default(0)
+}
+
+model Sales {
+  id                     String    @id @default(cuid())
+  projectId              String
+  project                Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  towerId                String?
+  tower                  Tower?    @relation(fields: [towerId], references: [id])
+  unitsSold              Int       @default(0)
+  unitsTotal             Int       @default(0)
+  promisedPossessionDate DateTime?
+  revenuePending         Float     @default(0)
+  complaintCount         Int       @default(0)
+  penaltyExposure        Float     @default(0)
+}
+
+model Issue {
+  id                String        @id @default(cuid())
+  projectId         String
+  project           Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  category          IssueCategory
+  severity          Severity      @default(MEDIUM)
+  owner             String
+  linkedMilestoneId String?
+  linkedMilestone   Milestone?    @relation(fields: [linkedMilestoneId], references: [id])
+  delayImpactDays   Int           @default(0)
+  costImpact        Float         @default(0)
+  escalationLevel   Int           @default(1)
+  status            IssueStatus   @default(OPEN)
+
+  createdAt DateTime @default(now())
+}
+
+model Compliance {
+  id                      String    @id @default(cuid())
+  projectId               String    @unique
+  project                 Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  escrowRequired          Float     @default(0)
+  escrowMaintained        Float     @default(0)
+  lastReraUpdate          DateTime?
+  nextReraUpdateDue       DateTime?
+  possessionLiabilityFlag Boolean   @default(false)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  role          String    @default("user")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
