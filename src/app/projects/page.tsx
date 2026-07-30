@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 
 export default async function ProjectsPage() {
   const session = await auth();
+  const isGuest = session?.user?.role === "guest";
   if (!session?.user) {
     redirect("/");
   }
@@ -23,6 +24,11 @@ const riskStyles: Record<string, string> = {
   return (
     <main className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-4xl mx-auto text-slate-800">
+        {isGuest && (
+  <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+    You're viewing a read-only demo. Ask the developer for sign in permisssions to create, edit, or delete projects.
+  </div>
+)}
 
         <div className="mb-8 flex items-center justify-between gap-4 border-b border-slate-200 pb-4">
           <div>
@@ -32,12 +38,21 @@ const riskStyles: Record<string, string> = {
             </p>
           </div>
 
-          <Link
-            href="/projects/new"
-            className="shrink-0 rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
-          >
-            Add project
-          </Link>
+          {isGuest ? (
+  <span
+    className="shrink-0 cursor-not-allowed rounded-md bg-slate-300 px-4 py-2 text-sm font-medium text-white opacity-60"
+    title="Not available in demo mode"
+  >
+    Add project
+  </span>
+) : (
+  <Link
+    href="/projects/new"
+    className="shrink-0 rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+  >
+    Add project
+  </Link>
+)}
         </div>
 
         {projects.length === 0 ? (
@@ -46,12 +61,21 @@ const riskStyles: Record<string, string> = {
             <p className="mt-1 text-sm text-slate-500">
               Add your first project to start tracking milestone risk.
             </p>
-            <Link
-              href="/projects/new"
-              className="mt-4 inline-block rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
-            >
-              Add project
-            </Link>
+            {isGuest ? (
+  <span
+    className="mt-4 inline-block cursor-not-allowed rounded-md bg-slate-300 px-4 py-2 text-sm font-medium text-white opacity-60"
+    title="Not available in demo mode"
+  >
+    Add project
+  </span>
+) : (
+  <Link
+    href="/projects/new"
+    className="mt-4 inline-block rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+  >
+    Add project
+  </Link>
+)}
           </div>
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">
@@ -94,12 +118,14 @@ const riskStyles: Record<string, string> = {
   <form action={deleteProject} className="absolute right-2 bottom-2">
   <input type="hidden" name="id" value={project.id} />
   <button
-    type="submit"
-    aria-label="Delete project"
-    className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-500 hover:border-red-300 hover:bg-red-50 hover:text-red-600"
-  >
-    Delete
-  </button>
+  type="submit"
+  disabled={isGuest}
+  aria-label="Delete project"
+  className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-500 hover:border-red-300 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-slate-200 disabled:hover:bg-white disabled:hover:text-slate-500"
+  title={isGuest ? "Not available in demo mode" : undefined}
+>
+  Delete
+</button>
 </form>
 </li>
   );
