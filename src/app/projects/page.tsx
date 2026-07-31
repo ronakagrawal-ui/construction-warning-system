@@ -38,21 +38,12 @@ const riskStyles: Record<string, string> = {
             </p>
           </div>
 
-          {isGuest ? (
-  <span
-    className="shrink-0 cursor-not-allowed rounded-md bg-slate-300 px-4 py-2 text-sm font-medium text-white opacity-60"
-    title="Not available in demo mode"
-  >
-    Add project
-  </span>
-) : (
-  <Link
-    href="/projects/new"
-    className="shrink-0 rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
-  >
-    Add project
-  </Link>
-)}
+          <Link
+  href="/projects/new"
+  className="shrink-0 rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+>
+  Add project
+</Link>
         </div>
 
         {projects.length === 0 ? (
@@ -61,21 +52,14 @@ const riskStyles: Record<string, string> = {
             <p className="mt-1 text-sm text-slate-500">
               Add your first project to start tracking milestone risk.
             </p>
-            {isGuest ? (
-  <span
-    className="mt-4 inline-block cursor-not-allowed rounded-md bg-slate-300 px-4 py-2 text-sm font-medium text-white opacity-60"
-    title="Not available in demo mode"
-  >
-    Add project
-  </span>
-) : (
-  <Link
-    href="/projects/new"
-    className="mt-4 inline-block rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
-  >
-    Add project
-  </Link>
-)}
+
+            <Link
+  href="/projects/new"
+  className="mt-4 inline-block rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+>
+  Add project
+</Link>
+
           </div>
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">

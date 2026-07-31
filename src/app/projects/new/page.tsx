@@ -1,10 +1,23 @@
 import { createProject } from "../actions";
 import Link from "next/link";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
-export default function NewProjectPage() {
+export default async function NewProjectPage() {
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/");
+  }
+  const isGuest = session.user.role === "guest";
+
   return (
     <main className="min-h-screen bg-slate-50 p-6">
       <div className="mx-auto max-w-lg text-slate-800">
+        {isGuest && (
+          <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            You're viewing a read-only demo. Browse freely — creating is disabled in demo mode.
+          </div>
+        )}
 
         <div className="mb-8 border-b border-slate-200 pb-4">
           <Link href="/projects" className="text-sm text-slate-500 hover:text-slate-900">
@@ -71,10 +84,12 @@ export default function NewProjectPage() {
           <div className="flex items-center gap-3 pt-2">
             <button
               type="submit"
-              className="rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+              disabled={isGuest}
+              title={isGuest ? "Not available in demo mode" : undefined}
+              className="rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-slate-800"
             >
               Create project
-            </button>
+          </button>
             <Link href="/projects" className="text-sm text-slate-500 hover:text-slate-900">
               Cancel
             </Link>

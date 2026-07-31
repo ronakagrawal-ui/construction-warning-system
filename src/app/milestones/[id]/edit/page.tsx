@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { updateMilestoneSchedule, updateMilestoneProgress } from "@/app/projects/actions";
 import Link from "next/link";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
 export default async function EditMilestonePage({
   params,
@@ -8,6 +10,11 @@ export default async function EditMilestonePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const session = await auth();
+if (!session?.user) {
+  redirect("/");
+}
+const isGuest = session.user.role === "guest";
 
   const milestone = await prisma.milestone.findUnique({
     where: { id: id },
@@ -21,6 +28,11 @@ export default async function EditMilestonePage({
     return (
       <main className="min-h-screen bg-slate-50 p-6">
         <div className="mx-auto max-w-lg text-slate-800">
+          {isGuest && (
+          <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            You're viewing a read-only demo. Browse freely — editing is disabled in demo mode.
+          </div>
+          )}
           <p className="text-sm text-slate-700">Milestone not found.</p>
           <Link href="/projects" className="mt-2 inline-block text-sm text-slate-500 hover:text-slate-900">
             ← Projects
@@ -87,9 +99,14 @@ export default async function EditMilestonePage({
               </div>
             </div>
 
-            <button type="submit" className="rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
-              Save schedule
-            </button>
+             <button
+                type="submit"
+                disabled={isGuest}
+                title={isGuest ? "Not available in demo mode" : undefined}
+                className="rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-slate-800"
+              >
+                Save schedule
+              </button>
           </form>
         </div>
 
@@ -107,7 +124,12 @@ export default async function EditMilestonePage({
               <p className="mt-1 text-xs text-slate-500">Planned progress is calculated from the dates above.</p>
             </div>
 
-            <button type="submit" className="rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
+            <button
+              type="submit"
+              disabled={isGuest}
+              title={isGuest ? "Not available in demo mode" : undefined}
+              className="rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-slate-800"
+            >
               Save progress
             </button>
           </form>

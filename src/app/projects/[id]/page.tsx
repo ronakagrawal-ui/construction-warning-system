@@ -4,6 +4,7 @@ import Link from "next/link";
 import { calculateScheduleVariance, getRiskLevel, calculatePlannedProgress } from "@/lib/risk";
 import SummaryGenerator from "./SummaryGenerator";
 import { generateProjectSummary } from "@/app/actions/ai";
+import { auth } from "@/auth";
 
 export default async function ProjectDetailPage({
   params,
@@ -11,6 +12,8 @@ export default async function ProjectDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const session = await auth();
+  const isGuest = session?.user?.role === "guest";
 
   const project = await prisma.project.findUnique({
     where: { id: id },
@@ -46,6 +49,11 @@ export default async function ProjectDetailPage({
     
   <main className="min-h-screen bg-slate-50 p-6">
   <div className="max-w-4xl mx-auto text-slate-800">
+    {isGuest && (
+      <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        You're viewing a read-only demo. Browse freely — creating and editing are disabled in demo mode.
+      </div>
+    )}
 
     <div className="mb-8 pb-4 border-b border-slate-200">
       <h1 className="text-3xl font-semibold text-slate-900">{project.name}</h1>
@@ -88,7 +96,14 @@ export default async function ProjectDetailPage({
     <form action={deleteMilestone}>
       <input type="hidden" name="id" value={milestone.id} />
       <input type="hidden" name="projectId" value={id} />
-      <button type="submit" className="text-sm text-slate-400 hover:text-red-600">Delete</button>
+      <button
+        type="submit"
+        disabled={isGuest}
+        title={isGuest ? "Not available in demo mode" : undefined}
+        className="text-sm text-slate-400 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:text-slate-400"
+      >
+        Delete
+      </button>
     </form>
   </div>
 </li>
@@ -162,7 +177,9 @@ export default async function ProjectDetailPage({
     <div className="flex items-end">
       <button
         type="submit"
-        className="w-full rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+        disabled={isGuest}
+        title={isGuest ? "Not available in demo mode" : undefined}
+        className="w-full rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-slate-800"
       >
         Add contractor
       </button>
@@ -229,11 +246,13 @@ export default async function ProjectDetailPage({
 
       <div className="flex items-end">
         <button
-          type="submit"
-          className="w-full rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
-        >
-          Add milestone
-        </button>
+        type="submit"
+        disabled={isGuest}
+        title={isGuest ? "Not available in demo mode" : undefined}
+        className="w-full rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-slate-800"
+      >
+        Add milestone
+      </button>
       </div>
     </div>
   </form>
