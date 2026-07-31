@@ -70,6 +70,7 @@ model Project {
   reraPromisedPossession DateTime?
   cachedSummary          String?
   summaryGeneratedAt     DateTime?
+  summaries              Summary[]
 
   towers      Tower[]
   milestones  Milestone[]
@@ -269,4 +270,13 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Summary {
+  id           String   @id @default(cuid())
+  content      String
+  riskData     Json
+  createdAt    DateTime @default(now())
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
