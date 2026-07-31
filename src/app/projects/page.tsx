@@ -26,7 +26,7 @@ const riskStyles: Record<string, string> = {
       <div className="max-w-4xl mx-auto text-slate-800">
         {isGuest && (
   <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-    You're viewing a read-only demo. Ask the developer for sign in permisssions to create, edit, or delete projects.
+    You're viewing a read-only demo. Ask the developer for sign in permissions to create, edit, or delete projects.
   </div>
 )}
 
