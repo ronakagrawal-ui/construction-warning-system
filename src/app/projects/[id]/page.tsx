@@ -20,6 +20,10 @@ export default async function ProjectDetailPage({
     include: {
   milestones: { include: { contractor: true } },
   contractors: true,
+   summaries: {
+    orderBy: { createdAt: "desc" },
+    take: 10,
+  },
 }, 
 });
 
@@ -62,7 +66,46 @@ export default async function ProjectDetailPage({
       </p>
     </div>
     <SummaryGenerator action={generateProjectSummary.bind(null, project.id, riskData)} />
-    <ul className="space-y-2">
+    <details className="mt-8 rounded-lg border border-slate-200 bg-white">
+  <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-50">
+    Summary history ({project.summaries.length})
+  </summary>
+
+  <div className="border-t border-slate-200 px-4 py-3">
+    {project.summaries.length === 0 ? (
+      <p className="text-sm text-slate-500">
+        No summaries generated yet. Generate one above to start building history.
+      </p>
+    ) : (
+      <ul className="space-y-3">
+        {project.summaries.map((summary) => {
+          const data = JSON.parse(summary.content);
+          return (
+            <li
+              key={summary.id}
+              className="rounded-lg border border-slate-200 bg-slate-50 p-4"
+            >
+              <p className="text-xs text-slate-400">
+                {summary.createdAt.toLocaleString("en-IN", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })}
+              </p>
+              <p className="mt-2 text-sm text-slate-700">{data.summary}</p>
+              <p className="mt-2 text-xs font-medium text-slate-900">
+                Top risk: <span className="font-normal text-slate-600">{data.topRisk}</span>
+              </p>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </div>
+</details>
+    <div className="mt-8 pt-6 border-t border-slate-200">
+      <h2 className="mb-3 text-sm font-semibold text-slate-900">Milestones</h2>
+
+      <ul className="space-y-2">
        {project.milestones.map((milestone) => {
         const plannedProgress = calculatePlannedProgress(milestone.plannedStartDate, milestone.plannedEndDate, new Date());
   const variance = calculateScheduleVariance(plannedProgress, milestone.actualProgress);
@@ -110,6 +153,7 @@ export default async function ProjectDetailPage({
   );
 })}
     </ul>
+    </div>
     
     <div className="mt-8 pt-6 border-t border-slate-200">
   <h2 className="mb-3 text-sm font-semibold text-slate-900">Contractors</h2>
