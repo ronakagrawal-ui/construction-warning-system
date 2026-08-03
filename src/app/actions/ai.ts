@@ -65,10 +65,18 @@ Rules:
       },
     });
 
-    return { ok: true, data: parsed };   // 👈 success case
+    await prisma.summary.create({
+    data: {
+        projectId,
+        content: JSON.stringify(parsed),   
+        riskData,                         
+  }
+});
+
+    return { ok: true, data: parsed };   
 
   } catch (error) {
     console.error("Summary generation failed:", error);
-    return { ok: false, error: "Couldn't generate summary. Please try again." };   // 👈 failure case
+    return { ok: false, error: "Couldn't generate summary. Please try again." };  
   }
 }
